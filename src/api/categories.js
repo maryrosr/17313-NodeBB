@@ -16,8 +16,8 @@ const events_1 = __importDefault(require("../events"));
 const user_1 = __importDefault(require("../user"));
 const groups_1 = __importDefault(require("../groups"));
 const privileges_1 = __importDefault(require("../privileges"));
-module.exports = function (categoriesAPI) {
-    categoriesAPI.get = function (caller, data) {
+const categoriesAPI = {
+    get: function (caller, data) {
         return __awaiter(this, void 0, void 0, function* () {
             const privCat = yield Promise.all([
                 privileges_1.default.categories.get(data.cid, caller.uid),
@@ -30,8 +30,8 @@ module.exports = function (categoriesAPI) {
             }
             return privCat[1];
         });
-    };
-    categoriesAPI.create = function (caller, data) {
+    },
+    create: function (caller, data) {
         return __awaiter(this, void 0, void 0, function* () {
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -39,8 +39,8 @@ module.exports = function (categoriesAPI) {
             const categoryObjs = yield categories_1.default.getCategories([response.cid], caller.uid);
             return categoryObjs[0];
         });
-    };
-    categoriesAPI.update = function (caller, data) {
+    },
+    update: function (caller, data) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!data) {
                 throw new Error('[[error:invalid-data]]');
@@ -49,8 +49,8 @@ module.exports = function (categoriesAPI) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             yield categories_1.default.update(data);
         });
-    };
-    categoriesAPI.delete = function (caller, data) {
+    },
+    delete: function (caller, data) {
         return __awaiter(this, void 0, void 0, function* () {
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -66,8 +66,8 @@ module.exports = function (categoriesAPI) {
                 name: name,
             });
         });
-    };
-    categoriesAPI.getPrivileges = (caller, cid) => __awaiter(this, void 0, void 0, function* () {
+    },
+    getPrivileges: (caller, cid) => __awaiter(void 0, void 0, void 0, function* () {
         let responsePayload;
         if (cid === 'admin') {
             responsePayload = yield privileges_1.default.admin.list(caller.uid);
@@ -79,8 +79,8 @@ module.exports = function (categoriesAPI) {
             responsePayload = yield privileges_1.default.categories.list(cid);
         }
         return responsePayload;
-    });
-    categoriesAPI.setPrivilege = (caller, data) => __awaiter(this, void 0, void 0, function* () {
+    }),
+    setPrivilege: (caller, data) => __awaiter(void 0, void 0, void 0, function* () {
         const existsCheck = yield Promise.all([
             user_1.default.exists(data.member),
             groups_1.default.exists(data.member),
@@ -119,5 +119,6 @@ module.exports = function (categoriesAPI) {
             action: data.set ? 'grant' : 'rescind',
             target: data.member,
         });
-    });
+    }),
 };
+module.exports = categoriesAPI;

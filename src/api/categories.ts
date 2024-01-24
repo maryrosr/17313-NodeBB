@@ -4,10 +4,8 @@ import user from '../user';
 import groups from '../groups';
 import privileges from '../privileges';
 
-type callerType ={
-    uid: number;
-    ip : number;
-}
+// Might be wrong
+import { UserObjectACP } from '../types';
 
 type dataType ={
     cid : string;
@@ -22,18 +20,18 @@ type responseType ={
     cid:string;
 }
 interface objCategoriesAPI {
-    get(caller : callerType, data: dataType): Promise<unknown>;
-    create(caller : callerType, data: dataType): Promise<unknown>;
-    update(caller : callerType, data : dataType) : Promise<unknown>;
-    delete(caller : callerType, data : dataType) : Promise<unknown>;
-    getPrivileges(caller : callerType, cid : string) : Promise<unknown>;
-    setPrivilege(caller : callerType, data : dataType) : Promise<unknown>;
+    get: (caller : UserObjectACP, data: dataType) => Promise<unknown>;
+    create: (caller : UserObjectACP, data: dataType) => Promise<unknown>;
+    update: (caller : UserObjectACP, data : dataType) => Promise<unknown>;
+    delete: (caller : UserObjectACP, data : dataType) => Promise<unknown>;
+    getPrivileges(caller : UserObjectACP, cid : string) : Promise<unknown>;
+    setPrivilege(caller : UserObjectACP, data : dataType) : Promise<unknown>;
 }
 interface privType {
     includes(priv :string): Promise<unknown>;
 }
-export = function (categoriesAPI : objCategoriesAPI) {
-    categoriesAPI.get = async function (caller, data) {
+const categoriesAPI :objCategoriesAPI = {
+    get: async function (caller, data) {
         const privCat: [userPrivType, boolean] = await Promise.all([
             privileges.categories.get(data.cid, caller.uid),
             // The next line calls a function in a module that has not been updated to TS yet
@@ -45,26 +43,26 @@ export = function (categoriesAPI : objCategoriesAPI) {
         }
 
         return privCat[1];
-    };
+    },
 
-    categoriesAPI.create = async function (caller, data) {
+    create: async function (caller, data) {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         const response:responseType = await categories.create(data) as responseType;
         const categoryObjs:number[] = await categories.getCategories([response.cid], caller.uid) as number[];
         return categoryObjs[0];
-    };
+    },
 
-    categoriesAPI.update = async function (caller, data) {
+    update: async function (caller, data) {
         if (!data) {
             throw new Error('[[error:invalid-data]]');
         }
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         await categories.update(data);
-    };
+    },
 
-    categoriesAPI.delete = async function (caller, data) {
+    delete: async function (caller, data) {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         const name:string = await categories.getCategoryField(data.cid, 'name') as string;
@@ -78,9 +76,9 @@ export = function (categoriesAPI : objCategoriesAPI) {
             cid: data.cid,
             name: name,
         });
-    };
+    },
 
-    categoriesAPI.getPrivileges = async (caller, cid) => {
+    getPrivileges: async (caller, cid) => {
         let responsePayload :string;
 
         if (cid === 'admin') {
@@ -92,9 +90,9 @@ export = function (categoriesAPI : objCategoriesAPI) {
         }
 
         return responsePayload;
-    };
+    },
 
-    categoriesAPI.setPrivilege = async (caller, data) => {
+    setPrivilege: async (caller, data) => {
         const existsCheck:[boolean, boolean] = await Promise.all([
             user.exists(data.member),
             groups.exists(data.member),
@@ -134,5 +132,6 @@ export = function (categoriesAPI : objCategoriesAPI) {
             action: data.set ? 'grant' : 'rescind',
             target: data.member,
         });
-    };
-}
+    },
+};
+export = categoriesAPI;
