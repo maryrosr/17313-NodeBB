@@ -4,40 +4,40 @@ import user from '../user';
 import groups from '../groups';
 import privileges from '../privileges';
 
-// Might be wrong
+
 import { UserObjectACP } from '../types';
 
-type dataType ={
+type Data ={
     cid : string;
     privilege : string[];
     member : string;
     set : string;
 }
-type userPrivType ={
+type UserPriv ={
     read: boolean;
 }
-type responseType ={
+type Response ={
     cid:string;
 }
-interface objCategoriesAPI {
-    get: (caller : UserObjectACP, data: dataType) => Promise<unknown>;
-    create: (caller : UserObjectACP, data: dataType) => Promise<unknown>;
-    update: (caller : UserObjectACP, data : dataType) => Promise<unknown>;
-    delete: (caller : UserObjectACP, data : dataType) => Promise<unknown>;
+interface CategoriesAPI {
+    get: (caller : UserObjectACP, data: Data) => Promise<unknown>;
+    create: (caller : UserObjectACP, data: Data) => Promise<unknown>;
+    update: (caller : UserObjectACP, data : Data) => Promise<unknown>;
+    delete: (caller : UserObjectACP, data : Data) => Promise<unknown>;
     getPrivileges(caller : UserObjectACP, cid : string) : Promise<unknown>;
-    setPrivilege(caller : UserObjectACP, data : dataType) : Promise<unknown>;
+    setPrivilege(caller : UserObjectACP, data : Data) : Promise<unknown>;
 }
-interface privType {
+interface Priv {
     includes(priv :string): Promise<unknown>;
 }
-const categoriesAPI :objCategoriesAPI = {
+const categoriesAPI :CategoriesAPI = {
     get: async function (caller, data) {
-        const privCat: [userPrivType, boolean] = await Promise.all([
+        const privCat: [UserPriv, boolean] = await Promise.all([
             privileges.categories.get(data.cid, caller.uid),
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             categories.getCategoryData(data.cid),
-        ]) as [userPrivType, boolean];
+        ]) as [UserPriv, boolean];
         if (!privCat[1] || !privCat[0].read) {
             return null;
         }
@@ -48,8 +48,8 @@ const categoriesAPI :objCategoriesAPI = {
     create: async function (caller, data) {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        const response:responseType = await categories.create(data) as responseType;
-        const categoryObjs:number[] = await categories.getCategories([response.cid], caller.uid) as number[];
+        const response: Response = await categories.create(data) as Response;
+        const categoryObjs: number[] = await categories.getCategories([response.cid], caller.uid) as number[];
         return categoryObjs[0];
     },
 
@@ -107,18 +107,18 @@ const categoriesAPI :objCategoriesAPI = {
             throw new Error('[[error:invalid-data]]');
         }
         if (parseInt(data.cid, 10) === 0) {
-            const adminPrivList :privType = await privileges.admin.getPrivilegeList() as privType;
+            const adminPrivList: Priv = await privileges.admin.getPrivilegeList() as Priv;
             const adminPrivs = privs.filter(priv => adminPrivList.includes(priv));
             if (adminPrivs.length) {
                 await privileges.admin[type](adminPrivs, data.member);
             }
-            const globalPrivList :privType = await privileges.global.getPrivilegeList() as privType;
+            const globalPrivList: Priv = await privileges.global.getPrivilegeList() as Priv;
             const globalPrivs = privs.filter(priv => globalPrivList.includes(priv));
             if (globalPrivs.length) {
                 await privileges.global[type](globalPrivs, data.member);
             }
         } else {
-            const categoryPrivList:privType = await privileges.categories.getPrivilegeList() as privType;
+            const categoryPrivList: Priv = await privileges.categories.getPrivilegeList() as Priv;
             const categoryPrivs = privs.filter(priv => categoryPrivList.includes(priv));
             await privileges.categories[type](categoryPrivs, data.cid, data.member);
         }
