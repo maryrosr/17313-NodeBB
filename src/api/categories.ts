@@ -8,29 +8,29 @@ import privileges from '../privileges';
 import { UserObjectACP } from '../types';
 
 type Data ={
-    cid : string;
-    privilege : string[];
-    member : string;
-    set : string;
+    cid: string;
+    privilege: string[];
+    member: string;
+    set: string;
 }
 type UserPriv ={
     read: boolean;
 }
 type Response ={
-    cid:string;
+    cid: string;
 }
 interface CategoriesAPI {
-    get: (caller : UserObjectACP, data: Data) => Promise<unknown>;
-    create: (caller : UserObjectACP, data: Data) => Promise<unknown>;
-    update: (caller : UserObjectACP, data : Data) => Promise<unknown>;
-    delete: (caller : UserObjectACP, data : Data) => Promise<unknown>;
-    getPrivileges(caller : UserObjectACP, cid : string) : Promise<unknown>;
-    setPrivilege(caller : UserObjectACP, data : Data) : Promise<unknown>;
+    get: (caller: UserObjectACP, data: Data) => Promise<unknown>;
+    create: (caller: UserObjectACP, data: Data) => Promise<unknown>;
+    update: (caller: UserObjectACP, data: Data) => Promise<unknown>;
+    delete: (caller: UserObjectACP, data: Data) => Promise<unknown>;
+    getPrivileges(caller: UserObjectACP, cid: string): Promise<unknown>;
+    setPrivilege(caller: UserObjectACP, data: Data): Promise<unknown>;
 }
 interface Priv {
-    includes(priv :string): Promise<unknown>;
+    includes(priv: string): Promise<unknown>;
 }
-const categoriesAPI :CategoriesAPI = {
+const categoriesAPI: CategoriesAPI = {
     get: async function (caller, data) {
         const privCat: [UserPriv, boolean] = await Promise.all([
             privileges.categories.get(data.cid, caller.uid),
@@ -65,7 +65,7 @@ const categoriesAPI :CategoriesAPI = {
     delete: async function (caller, data) {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        const name:string = await categories.getCategoryField(data.cid, 'name') as string;
+        const name: string = await categories.getCategoryField(data.cid, 'name') as string;
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         await categories.purge(data.cid, caller.uid);
@@ -79,7 +79,7 @@ const categoriesAPI :CategoriesAPI = {
     },
 
     getPrivileges: async (caller, cid) => {
-        let responsePayload :string;
+        let responsePayload: string;
 
         if (cid === 'admin') {
             responsePayload = await privileges.admin.list(caller.uid);
